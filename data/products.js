@@ -658,3 +658,22 @@ export const products = [
     ]
   }
 ];
+
+
+const timeoutIds = {}; 
+export function productToCartNotif(addedToCart, productId){
+  if (addedToCart) {
+            
+    if (timeoutIds[productId]) {
+        clearTimeout(timeoutIds[productId]);
+    }
+
+    addedToCart.classList.add('added-to-cart-visible');
+
+    
+    timeoutIds[productId] = setTimeout(() => {
+        addedToCart.classList.remove('added-to-cart-visible');
+        delete timeoutIds[productId]; 
+    }, 1500);
+  }
+}
