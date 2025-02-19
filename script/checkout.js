@@ -3,6 +3,8 @@ import {products} from '../data/products.js';
 import { moneyConvert } from './utils/money.js';
 import dayjs from 'https://unpkg.com/dayjs@1.11.10/esm/index.js';
 import {deliveryOptions} from '../data/deliveryoptions.js';
+import {updateCheckoutHTML} from './utils/checkoutHTML.js';
+
 
 updateCartQuantity();
 
@@ -47,7 +49,7 @@ cart.forEach((item) => {
           <div class="delivery-options-title">Choose a delivery option:</div>
 
           ${deliveryOptions.map(option => `
-            <div class="delivery-option">
+            <div class="delivery-option js-delivery-option">
               <input type="radio"
                 class="delivery-option-input js-delivery-radio"
                 name="delivery-option-${orderId}"
@@ -67,6 +69,7 @@ cart.forEach((item) => {
       </div>
     </div>
   `;
+  updateCheckoutHTML();
 });
 
 // Listen for radio button change
@@ -90,6 +93,7 @@ document.querySelectorAll('.js-delivery-radio').forEach(radio => {
     if (deliveryDateElement) {
       deliveryDateElement.innerText = `Delivery date: ${deliveryDayFormat(deliveryId)}`;
     }
+    updateCheckoutHTML();
   });
 });
 
@@ -118,15 +122,17 @@ function deliveryPriceFormat(deliveryOptionId){
 const jsDelete = document.querySelectorAll('.js-delete-link');
 jsDelete.forEach((link) => {
     link.addEventListener('click', () =>{
-        const productId = link.dataset.productId;
-        removeFromCart(productId);
+      const productId = link.dataset.productId;
+      removeFromCart(productId);
 
-        const productIdContainer = document.querySelector(`.js-cart-item-container-${productId}`);
-        productIdContainer.remove();
-        updateCartQuantity();
-        const quantityLabel = document.querySelector(`.js-cart-item-container-${productId} .quantity-label`);
-        quantityLabel.textContent = newQuantity;
+      const productIdContainer = document.querySelector(`.js-cart-item-container-${productId}`);
+      productIdContainer.remove();
+      updateCartQuantity();
+      updateCheckoutHTML();
+      const quantityLabel = document.querySelector(`.js-cart-item-container-${productId} .quantity-label`);
+      quantityLabel.textContent = newQuantity;
     });
+  
     
 });
 
@@ -150,6 +156,7 @@ jsUpdate.forEach((link) => {
     
     // Optional: Auto-focus on the input field when clicking update
     quantityInput.focus();
+
   });
 });
 
@@ -188,8 +195,9 @@ jsSave.forEach((link) => {
     }
     
     updateCartQuantity();
-
+    updateCheckoutHTML();
   });
 });
+
 
 
