@@ -1,101 +1,119 @@
 import {cart, removeFromCart, updateCartQuantity} from '../data/cart.js';
 import {products} from '../data/products.js';
 import { moneyConvert } from './utils/money.js';
+import dayjs from 'https://unpkg.com/dayjs@1.11.10/esm/index.js';
+import {deliveryOptions} from '../data/deliveryoptions.js';
 
 updateCartQuantity();
+
+
+
 const orderSummary = document.getElementById('order-summary');
 cart.forEach((item) => {
   const orderId = item.productId;
-  let matchingId;
-  products.forEach((product)=>{
-    if(product.id === orderId){
-        matchingId = product;
+  let matchingId = products.find(product => product.id === orderId);
+
+  console.log(matchingId);
+  orderSummary.innerHTML += `
+    <div class="cart-item-container js-cart-item-container-${orderId}">
+      <div class="delivery-date js-delivery-date-${orderId}">
+        Delivery date: ${deliveryDayFormat(item.selectedDeliveryOption || '1')}
+      </div>
+
+      <div class="cart-item-details-grid">
+        <img class="product-image" src="${matchingId.image}">
+
+        <div class="cart-item-details">
+          <div class="product-name">${matchingId.name}</div>
+          <div class="product-price">$${moneyConvert(matchingId.priceCents)}</div>
+          <div class="product-quantity">
+            <span>
+              Quantity: <span class="quantity-label">${item.quantity}</span>
+            </span>
+            <span class="update-quantity-link link-primary js-update-link" data-product-id="${matchingId.id}">
+              Update
+            </span>
+            <input class="quantity-input" type="number">
+            <span class="save-quantity-link link-primary js-save-link" data-product-id="${matchingId.id}">
+              Save
+            </span>
+            <span class="delete-quantity-link link-primary js-delete-link" data-product-id="${matchingId.id}">
+              Delete
+            </span>
+          </div>
+        </div>
+
+        <div class="delivery-options">
+          <div class="delivery-options-title">Choose a delivery option:</div>
+
+          ${deliveryOptions.map(option => `
+            <div class="delivery-option">
+              <input type="radio"
+                class="delivery-option-input js-delivery-radio"
+                name="delivery-option-${orderId}"
+                data-product-id="${orderId}"
+                data-delivery-id="${option.id}"
+                ${item.selectedDeliveryOption === option.id ? "checked" : ""}
+              >
+              <div>
+                <div class="delivery-option-date">${deliveryDayFormat(option.id)}</div>
+                <div class="delivery-option-price">
+                  ${option.deliveryCents === 0 ? "FREE" : `$${(option.deliveryCents / 100).toFixed(2)}`} - Shipping
+                </div>
+              </div>
+            </div>
+          `).join('')}
+        </div>
+      </div>
+    </div>
+  `;
+});
+
+// Listen for radio button change
+document.querySelectorAll('.js-delivery-radio').forEach(radio => {
+  radio.addEventListener('change', (event) => {
+    const productId = event.target.dataset.productId;
+    const deliveryId = event.target.dataset.deliveryId;
+
+    // Update the cart item with the selected delivery option
+    cart.forEach(item => {
+      if (item.productId === productId) {
+        item.selectedDeliveryOption = deliveryId;
+      }
+    });
+
+    // Save to localStorage
+    localStorage.setItem("carts", JSON.stringify(cart));
+
+    // Update the displayed delivery date
+    const deliveryDateElement = document.querySelector(`.js-delivery-date-${productId}`);
+    if (deliveryDateElement) {
+      deliveryDateElement.innerText = `Delivery date: ${deliveryDayFormat(deliveryId)}`;
     }
   });
-  console.log(matchingId);
-  orderSummary.innerHTML += `<div class="cart-item-container js-cart-item-container-${orderId}">
-          <div class="delivery-date">
-            Delivery date: Tuesday, June 21
-          </div>
-
-          <div class="cart-item-details-grid">
-            <img class="product-image"
-              src="${matchingId.image}">
-
-            <div class="cart-item-details">
-              <div class="product-name">
-                ${matchingId.name}
-              </div>
-              <div class="product-price">
-                $${moneyConvert(matchingId.priceCents)}
-              </div>
-              <div class="product-quantity">
-                <span>
-                  Quantity: <span class="quantity-label">${item.quantity}</span>
-                </span>
-                <span class="update-quantity-link link-primary js-update-link" data-product-id="${matchingId.id}">
-                  Update
-                </span>
-                <input class="quantity-input" type="number">
-                  <span class="save-quantity-link link-primary js-save-link" data-product-id="${matchingId.id}">
-                    Save
-                  </span>
-                </input>
-                <span class="delete-quantity-link link-primary js-delete-link" data-product-id="${matchingId.id}">
-                  Delete
-                </span>
-              </div>
-            </div>
-
-            <div class="delivery-options">
-
-              <div class="delivery-options-title">
-                  Choose a delivery option:
-              </div>
-              <div class="delivery-option">
-                  <input type="radio" checked
-                      class="delivery-option-input"
-                      name="delivery-option-${orderId}">
-                  <div>
-                      <div class="delivery-option-date">
-                      Tuesday, June 21
-                      </div>
-                      <div class="delivery-option-price">
-                      FREE Shipping
-                      </div>
-                  </div>
-                  </div>
-                  <div class="delivery-option">
-                  <input type="radio"
-                      class="delivery-option-input"
-                      name="delivery-option-${orderId}">
-                  <div>
-                      <div class="delivery-option-date">
-                      Wednesday, June 15
-                      </div>
-                      <div class="delivery-option-price">
-                      $4.99 - Shipping
-                      </div>
-                  </div>
-                  </div>
-                  <div class="delivery-option">
-                  <input type="radio"
-                      class="delivery-option-input"
-                      name="delivery-option-${orderId}">
-                  <div>
-                      <div class="delivery-option-date">
-                      Monday, June 13
-                      </div>
-                      <div class="delivery-option-price">
-                      $9.99 - Shipping
-                      </div>
-                  </div>
-              </div>
-
-            </div>
-          </div>
-        </div>`
 });
+
+
+function deliveryDayFormat(deliveryOptionId) {
+  const deliveryOption = deliveryOptions.find(item => item.id === deliveryOptionId);
+  if (deliveryOption) {
+    const day = dayjs();
+    const deliveryDate = day.add(deliveryOption.deliveryDays, 'days');
+    return deliveryDate.format('dddd, MMMM D');
+  }
+  return "Invalid Delivery Option";
+}
+
+function deliveryPriceFormat(deliveryOptionId){
+  const deliveryOption = deliveryOptions.find((item) => item.id === deliveryOptionId);
+  if(deliveryOption){
+    const deliveryPrice = (deliveryOption.deliveryCents /100).toFixed(2);
+    if(deliveryOption.deliveryCents === 0){
+      return 'FREE';
+    }
+    return deliveryPrice;
+  }
+}
 
 const jsDelete = document.querySelectorAll('.js-delete-link');
 jsDelete.forEach((link) => {
